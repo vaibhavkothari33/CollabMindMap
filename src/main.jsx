@@ -5,11 +5,11 @@ import './index.css'
 import App from './App.jsx'
 
 const clientId = import.meta.env.VITE_clientId;
-const Domain = import.meta.env.VITE_domain;
+const domainId = import.meta.env.VITE_domain;
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Auth0Provider
-      domain={Domain}
+      domain={domainId}
       clientId={clientId}
       authorizationParams={{
         redirect_uri: window.location.origin

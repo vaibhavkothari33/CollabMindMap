@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
     ReactFlow,
     MiniMap,
@@ -10,6 +10,9 @@ import {
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3001'); // socket server
 
 const initialNodes = [
     { id: '1', position: { x: 0, y: 0 }, data: { label: '1' } },
@@ -26,9 +29,46 @@ export default function MindMap() {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+    //socket setup
+    useEffect(() => {
+        socket.on('initial_data', (data) => {
+            setNodes(data.nodes);
+            setEdges(data.edges);
+        });
+
+        socket.on('nodes_updated', (updatedNodes) => {
+            setNodes(updatedNodes);
+        });
+
+        socket.on('edges_updated', (updatedEdges) => {
+            setEdges(updatedEdges);
+        });
+        return () => {
+            socket.off('inital_data');
+            socket.off('nodes_updated');
+            socket.off('edges_updated');
+        };
+    }, []);
+
+    const handleNodeChange = useCallback((changes) => {
+        onNodesChange(changes);
+        socket.emit('update_nodes', changes);
+    }, [onNodesChange]);
+
+    const handleEdgeChange = useCallback((changes) => {
+        onEdgesChange(changes);
+        socket.emit('update_edges', changes);
+    }, [onEdgesChange]);
+
     const onConnect = useCallback(
-        (params) => setEdges((eds) => addEdge(params, eds)),
-        [setEdges],
+        (params) => {
+            setEdges((eds) => {
+                const newEdges = addEdge(params, eds);
+                socket.emit('update_edges', newEdges);
+                return newEdges;
+            });
+        },
+        [setEdges]
     );
 
     return (

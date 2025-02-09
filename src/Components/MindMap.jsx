@@ -37,11 +37,11 @@
 
 //     const downloadMindMap = useCallback(() => {
 //     if (!reactFlowInstance) return;
-    
+
 //     const flow = reactFlowInstance.toObject();
 //     const dataStr = JSON.stringify(flow);
 //     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    
+
 //     const exportFileDefaultName = `mindmap-${roomId}.json`;
 //     const linkElement = document.createElement('a');
 //     linkElement.setAttribute('href', dataUri);
@@ -93,7 +93,7 @@
 //     socket.on("user-count-updated", (count) => {
 //       setUserCount(count);
 //       console.log(count);
-      
+
 //     });
 
 //         socket.on("user-disconnected", ({ userId }) => {
@@ -106,13 +106,13 @@
 
 //     const handleMouseMove = (event) => {
 //       if (!reactFlowWrapper.current) return;
-      
+
 //       const bounds = reactFlowWrapper.current.getBoundingClientRect();
 //       const position = {
 //         x: event.clientX - bounds.left,
 //         y: event.clientY - bounds.top,
 //       };
-      
+
 //       socket.emit("cursor-move", {
 //         roomId,
 //         userId: user.sub,
@@ -135,7 +135,7 @@
 
 //       // socket.off("user-count-updated");
 //       // socket.off("user-disconnected");
-      
+
 //     };
 //   }, [roomId, user, navigate, setNodes, setEdges]);
 
@@ -361,7 +361,7 @@
 
 
 import { useEffect, useCallback, useState, useRef } from 'react';
-import ReactFlow, {Controls,Background,addEdge,useNodesState,useEdgesState,MarkerType} from 'react-flow-renderer';
+import ReactFlow, { Controls, Background, addEdge, useNodesState, useEdgesState, MarkerType } from 'react-flow-renderer';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { io } from 'socket.io-client';
@@ -397,11 +397,11 @@ const MindMap = () => {
 
   const downloadMindMap = useCallback(() => {
     if (!reactFlowInstance) return;
-    
+
     const flow = reactFlowInstance.toObject();
     const dataStr = JSON.stringify(flow);
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    
+
     const exportFileDefaultName = `mindmap-${roomId}.json`;
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -410,7 +410,7 @@ const MindMap = () => {
   }, [reactFlowInstance, roomId]);
 
   useEffect(() => {
-   
+
 
     if (!user) return;
 
@@ -509,24 +509,45 @@ const MindMap = () => {
     socket.emit("update-node", { roomId, node });
   }, [roomId]);
 
-  const addNode = useCallback(() => {
-    const position = reactFlowInstance?.project({
-      x: Math.random() * 500,
-      y: Math.random() * 500,
-    }) || { x: 0, y: 0 };
+  const handleNodeChange = useCallback((nodeId, newData) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          const updatedNode = {
+            ...node,
+            data: { ...node.data, ...newData } // Ensure all existing data is preserved
+          };
+          socket.emit("update-node", { roomId, node: updatedNode });
+          return updatedNode;
+        }
+        return node;
+      })
+    );
+  }, [roomId, setNodes]);
+  
 
-    const newNode = {
-      id: `node-${Date.now()}`,
-      type: 'custom',
-      position,
-      data: {
-        label: 'New Node',
-        createdBy: user?.name,
-      }
-    };
-    socket.emit("add-node", { roomId, node: newNode });
-    setNodes((nds) => [...nds, newNode]);
-  }, [reactFlowInstance, user, roomId, setNodes]);
+
+ const addNode = useCallback(() => {
+  const position = reactFlowInstance?.project({
+    x: Math.random() * 500,
+    y: Math.random() * 500,
+  }) || { x: 0, y: 0 };
+
+  const newNode = {
+    id: `node-${Date.now()}`,
+    type: 'custom',
+    position,
+    data: {
+      // title: 'New Title',
+      // label: 'New Node',
+      createdBy: user?.name,
+      onChange: (newData) => handleNodeChange(newNode.id, newData)
+    }
+  };
+  
+  socket.emit("add-node", { roomId, node: newNode });
+  setNodes((nds) => [...nds, newNode]);
+}, [reactFlowInstance, user, roomId, setNodes, handleNodeChange]);
 
   const onNodeDoubleClick = useCallback((event, node) => {
     setSelectedNode(node);
@@ -539,7 +560,8 @@ const MindMap = () => {
       socket.emit("update-node", { roomId, node: updatedNode });
       setNodes((nds) =>
         nds.map((n) => (n.id === node.id ? updatedNode : n))
-      );
+    );
+  
     }
     setSelectedNode(null);
   }, [roomId, setNodes]);

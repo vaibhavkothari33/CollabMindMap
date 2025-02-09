@@ -2,31 +2,38 @@ import PropTypes from 'prop-types';
 
 const CursorsOverlay = ({ cursors, currentUserId }) => {
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div className="absolute inset-0 pointer-events-none z-50">
       {Object.entries(cursors).map(([userId, cursor]) => {
         if (userId === currentUserId) return null;
         
         return (
           <div
             key={userId}
-            className="absolute flex flex-col items-start"
+            className="absolute flex flex-col rounded-full items-start"
             style={{
               left: cursor.position.x,
               top: cursor.position.y,
               transform: 'translate(-50%, -50%)',
+              transition: 'all 0.1s ease-out',
             }}
           >
             <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              style={{ fill: cursor.userColor }}
+              width="14"
+              height="14"
+              viewBox="0 0 36 36"
+              style={{
+                fill: cursor.userColor,
+                filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / 0.2))',
+              }}
             >
-              <path d="M5,2 L19,12 L12,13 L11,19 L5,2" />
+              <path d="M0,0 L24,0 L12,36 L0,0" />
             </svg>
             <span
-              className="px-2 py-1 rounded text-xs text-white"
-              style={{ backgroundColor: cursor.userColor }}
+              className="px-2 py-1 rounded text-xs text-white whitespace-nowrap mt-1"
+              style={{
+                backgroundColor: cursor.userColor,
+                filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / 0.2))',
+              }}
             >
               {cursor.userName}
             </span>

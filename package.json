@@ -15,9 +15,13 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "nanoid": "^5.0.9",
     "nodemon": "^3.1.9",
+    "portfinder": "^1.0.32",
+    "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-flow-renderer": "^10.3.17",
     "react-router-dom": "^7.0.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
